@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Nav from "../components/Nav";
-import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Footer from "../components/Footer";
 
-// Dynamically import Monaco Editor with SSR disabled
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const languageMap = {
@@ -17,15 +15,22 @@ const languageMap = {
 };
 
 export default function OnlineCompiler() {
-  const searchParams = useSearchParams();
-  const initialCode = searchParams.get("code") || "";
-  const initialLang = searchParams.get("lang") || "cpp";
-
-  const [code, setCode] = useState(initialCode);
-  const [language, setLanguage] = useState(initialLang);
+  const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("cpp");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Read search params only on client
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const initialCode = params.get("code") || "";
+      const initialLang = params.get("lang") || "cpp";
+      setCode(initialCode);
+      setLanguage(initialLang);
+    }
+  }, []);
 
   const runCode = async () => {
     if (!code.trim()) {
