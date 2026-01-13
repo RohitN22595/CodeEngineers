@@ -12,6 +12,7 @@
     "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/react": "^6.1.20",
     "@monaco-editor/react": "^4.7.0",
+    "@vercel/analytics": "^1.6.1",
     "dayjs": "^1.11.19",
     "next": "16.1.1",
     "next-auth": "^4.24.13",
