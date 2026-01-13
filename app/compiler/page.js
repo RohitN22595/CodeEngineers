@@ -1,9 +1,13 @@
 "use client";
+
 import React, { useState } from "react";
 import Nav from "../components/Nav";
 import { useSearchParams } from "next/navigation";
-import Editor from "@monaco-editor/react";
+import dynamic from "next/dynamic";
 import Footer from "../components/Footer";
+
+// Dynamically import Monaco Editor with SSR disabled
+const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const languageMap = {
   cpp: 52,
