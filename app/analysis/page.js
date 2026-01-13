@@ -10,17 +10,19 @@ import CFOverviewStats from "../components/CFOverviewStats";
 import Footer from "../components/Footer";
 
 // Fetch solved per day
-async function fetchSolvedPerDay(handle: string) {
-  const res = await fetch(
-    `https://codeforces.com/api/user.status?handle=${handle}`
-  );
-  const data: any = await res.json();
-  if (data.status !== "OK") return {};
+async function fetchSolvedPerDay(handle) {
+  const res = await fetch(`https://codeforces.com/api/user.status?handle=${handle}`);
+  const data = await res.json();
 
-  const solvedPerDay: Record<string, number> = {};
-  const solvedSet = new Set<string>();
+  if (data.status !== "OK") {
+    console.error("CF API failed");
+    return {};
+  }
 
-  data.result.forEach((sub: any) => {
+  const solvedPerDay = {};
+  const solvedSet = new Set();
+
+  data.result.forEach((sub) => {
     if (sub.verdict !== "OK") return;
 
     const problemId = `${sub.problem.contestId}-${sub.problem.index}`;
@@ -37,9 +39,8 @@ async function fetchSolvedPerDay(handle: string) {
   return solvedPerDay;
 }
 
-
 // Calculate stats
-function calculateStats(solvedData: Record<string, number>) {
+function calculateStats(solvedData) {
   const today = dayjs().format("YYYY-MM-DD");
   const last7 = dayjs().subtract(6, "day");
   const last30 = dayjs().subtract(29, "day");
@@ -49,7 +50,7 @@ function calculateStats(solvedData: Record<string, number>) {
     lastWeek = 0,
     lastMonth = 0;
 
-  Object.entries(solvedData).forEach(([date, count]: [string, number]) => {
+  Object.entries(solvedData).forEach(([date, count]) => {
     total += count;
     if (date === today) todayCount += count;
 
@@ -61,20 +62,18 @@ function calculateStats(solvedData: Record<string, number>) {
   return { total, todayCount, lastWeek, lastMonth };
 }
 
-
 export default function CodeforcesProfile() {
-  const [handle, setHandle] = useState<string>("");
-  const [profile, setProfile] = useState<any>(null);
-  const [solvedData, setSolvedData] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [selectedYear, setSelectedYear] = useState<number>(dayjs().year());
-  const [registeredYear, setRegisteredYear] = useState<number>(dayjs().year());
-
+  const [handle, setHandle] = useState("");
+  const [profile, setProfile] = useState(null);
+  const [solvedData, setSolvedData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedYear, setSelectedYear] = useState(dayjs().year());
+  const [registeredYear, setRegisteredYear] = useState(dayjs().year());
 
   const stats = calculateStats(solvedData);
 
-  const fetchProfileAndCalendar = async (inputHandle: string) => {
+  const fetchProfileAndCalendar = async (inputHandle) => {
     const h = inputHandle || handle;
     if (!h.trim()) {
       setError("Enter a handle");
@@ -88,9 +87,7 @@ export default function CodeforcesProfile() {
 
     try {
       // Fetch profile
-      const resProfile = await fetch(
-        `https://codeforces.com/api/user.info?handles=${h}`
-      );
+      const resProfile = await fetch(`https://codeforces.com/api/user.info?handles=${h}`);
       const dataProfile = await resProfile.json();
       if (dataProfile.status !== "OK") {
         setError("Handle not found");
@@ -120,12 +117,11 @@ export default function CodeforcesProfile() {
   return (
     <>
       <Nav
-        onHandleSelect={(h: string) => {
+        onHandleSelect={(h) => {
           setHandle(h);
           fetchProfileAndCalendar(h);
         }}
       />
-
 
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">Codeforces Profile</h1>
@@ -144,10 +140,7 @@ export default function CodeforcesProfile() {
               <div>
                 <h2 className="text-xl font-bold">{profile.handle}</h2>
                 <p className="text-sm text-gray-600">
-                  Last seen:{" "}
-                  {dayjs
-                    .unix(profile.lastOnlineTimeSeconds)
-                    .format("DD MMM YYYY, HH:mm")}
+                  Last seen: {dayjs.unix(profile.lastOnlineTimeSeconds).format("DD MMM YYYY, HH:mm")}
                 </p>
               </div>
             </div>
@@ -161,11 +154,9 @@ export default function CodeforcesProfile() {
               <p>Country: {profile.country ?? "N/A"}</p>
               <p>Organization: {profile.organization ?? "N/A"}</p>
             </div>
-
-            {/* Solved Stats */}
-            
           </div>
         )}
+
         {/* Yearly Calendar */}
         {!loading && Object.keys(solvedData).length > 0 && profile && (
           <div className="flex justify-center items-center w-[100%]">
@@ -176,26 +167,27 @@ export default function CodeforcesProfile() {
               onYearChange={(y) => setSelectedYear(y)}
             />
 
-            <div className="">
-              <div className="  text-center">
+            <div>
+              <div className="text-center">
                 <p className="text-sm text-gray-500">Total Solved</p>
                 <p className="text-xl font-bold">{stats.total}</p>
               </div>
-              <div className="  text-center">
+              <div className="text-center">
                 <p className="text-sm text-gray-500">Today</p>
                 <p className="text-xl font-bold">{stats.todayCount}</p>
               </div>
-              <div className="  text-center">
+              <div className="text-center">
                 <p className="text-sm text-gray-500">Last 7 Days</p>
                 <p className="text-xl font-bold">{stats.lastWeek}</p>
               </div>
-              <div className="  text-center">
+              <div className="text-center">
                 <p className="text-sm text-gray-500">Last 30 Days</p>
                 <p className="text-xl font-bold">{stats.lastMonth}</p>
               </div>
             </div>
           </div>
         )}
+
         {/* Other Components */}
         {profile && <ProblemRatingsChart handle={profile.handle} />}
         {profile && <TagsAndUnsolved handle={profile.handle} />}

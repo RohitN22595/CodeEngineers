@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "app/about/page.js", "app/analysis/page.js", "app/calander/page.js", "app/compiler/page.js", "app/components/CFOverviewStats.js", "app/components/Footer.js", "app/components/Nav.js", "app/components/ProblemRatingsChart.js", "app/components/RatingGraph.js", "app/components/TagsAndUnsolved.js", "app/components/YearlyCalendar.js", "app/yourcode/page.js"  ],
   "exclude": ["node_modules"]
 }

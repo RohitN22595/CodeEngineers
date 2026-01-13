@@ -9,24 +9,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-/* ---------- Types ---------- */
-
-type TagsMap = Record<string, number>;
-
-type CFProblem = {
-  contestId: number;
-  index: string;
-  tags: string[];
-};
-
-type CFSubmission = {
-  verdict: string;
-  problem: CFProblem;
-};
-
 /* ---------- Helpers ---------- */
 
-const getRandomColor = (str: string): string => {
+const getRandomColor = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -34,23 +19,16 @@ const getRandomColor = (str: string): string => {
   return `hsl(${hash % 360}, 70%, 55%)`;
 };
 
-/* ---------- API ---------- */
-
-async function fetchStats(handle: string): Promise<{
-  tags: TagsMap;
-  unsolved: string[];
-}> {
-  const res = await fetch(
-    `https://codeforces.com/api/user.status?handle=${handle}`
-  );
+async function fetchStats(handle) {
+  const res = await fetch(`https://codeforces.com/api/user.status?handle=${handle}`);
   const data = await res.json();
   if (data.status !== "OK") return { tags: {}, unsolved: [] };
 
-  const tagsMap: TagsMap = {};
-  const solvedSet = new Set<string>();
-  const unsolvedSet = new Set<string>();
+  const tagsMap = {};
+  const solvedSet = new Set();
+  const unsolvedSet = new Set();
 
-  data.result.forEach((sub: CFSubmission) => {
+  data.result.forEach((sub) => {
     const problemId = `${sub.problem.contestId}-${sub.problem.index}`;
 
     if (sub.verdict === "OK") {
@@ -71,10 +49,10 @@ async function fetchStats(handle: string): Promise<{
 
 /* ---------- Component ---------- */
 
-export default function TagsAndUnsolved({ handle }: { handle: string }) {
-  const [tags, setTags] = useState<TagsMap>({});
-  const [unsolved, setUnsolved] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+export default function TagsAndUnsolved({ handle }) {
+  const [tags, setTags] = useState({});
+  const [unsolved, setUnsolved] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!handle) return;
@@ -106,7 +84,7 @@ export default function TagsAndUnsolved({ handle }: { handle: string }) {
                 <Cell key={e.name} fill={getRandomColor(e.name)} />
               ))}
             </Pie>
-            <Tooltip formatter={(v: number, n: string) => [`Solved: ${v}`, n]} />
+            <Tooltip formatter={(v, n) => [`Solved: ${v}`, n]} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -124,6 +102,7 @@ export default function TagsAndUnsolved({ handle }: { handle: string }) {
                 key={p}
                 href={`https://codeforces.com/contest/${contestId}/problem/${index}`}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="px-2 py-1 bg-gray-200 rounded hover:bg-blue-200"
               >
                 {p}

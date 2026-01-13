@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Editor from "@monaco-editor/react";
 import Footer from "../components/Footer";
 
-const languageMap: Record<string, number> = {
+const languageMap = {
   cpp: 52,
   python: 71,
   java: 62,
@@ -14,16 +14,16 @@ const languageMap: Record<string, number> = {
 
 export default function OnlineCompiler() {
   const searchParams = useSearchParams();
-  const initialCode: string = searchParams.get("code") ?? "";
-  const initialLang: string = searchParams.get("lang") ?? "cpp";
+  const initialCode = searchParams.get("code") || "";
+  const initialLang = searchParams.get("lang") || "cpp";
 
-  const [code, setCode] = useState<string>(initialCode);
-  const [language, setLanguage] = useState<string>(initialLang);
-  const [input, setInput] = useState<string>("");
-  const [output, setOutput] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [code, setCode] = useState(initialCode);
+  const [language, setLanguage] = useState(initialLang);
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const runCode = async (): Promise<void> => {
+  const runCode = async () => {
     if (!code.trim()) {
       alert("Write some code first!");
       return;
@@ -33,7 +33,7 @@ export default function OnlineCompiler() {
     setOutput("Running...");
 
     try {
-      const res: Response = await fetch(
+      const res = await fetch(
         "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
         {
           method: "POST",
@@ -46,11 +46,10 @@ export default function OnlineCompiler() {
         }
       );
 
-      const data: any = await res.json();
-      const result =
-        data.stdout || data.compile_output || data.stderr || "No output";
+      const data = await res.json();
+      const result = data.stdout || data.compile_output || data.stderr || "No output";
       setOutput(result);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
       setOutput("Error running code");
     }
@@ -67,9 +66,7 @@ export default function OnlineCompiler() {
           <select
             className="border px-2 py-1 rounded"
             value={language}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setLanguage(e.target.value)
-            }
+            onChange={(e) => setLanguage(e.target.value)}
           >
             <option value="cpp">C++</option>
             <option value="python">Python</option>
@@ -89,16 +86,14 @@ export default function OnlineCompiler() {
           height="400px"
           language={language}
           value={code}
-          onChange={(value?: string) => setCode(value ?? "")}
+          onChange={(value) => setCode(value || "")}
           theme="vs-dark"
         />
 
         <textarea
           placeholder="Input (Optional)"
           value={input}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-            setInput(e.target.value)
-          }
+          onChange={(e) => setInput(e.target.value)}
           className="w-full border px-2 py-1 rounded mt-2"
           rows={4}
         />

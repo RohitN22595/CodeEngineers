@@ -12,61 +12,33 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const COLORS = [
-  "#ff4d4f",
-  "#52c41a",
-  "#1890ff",
-  "#faad14",
-  "#722ed1",
-  "#13c2c2",
-];
+const COLORS = ["#ff4d4f", "#52c41a", "#1890ff", "#faad14", "#722ed1", "#13c2c2"];
 
-type PieData = {
-  name: string;
-  value: number;
-};
-
-type Stats = {
-  tried: number;
-  solved: number;
-};
-
-type ContestStats = {
-  count: number;
-  best: number;
-  worst: number;
-  maxUp: number;
-  maxDown: number;
-};
-
-export default function CFOverviewStats({ handle }: { handle: string }) {
-  const [verdicts, setVerdicts] = useState<PieData[]>([]);
-  const [languages, setLanguages] = useState<PieData[]>([]);
-  const [levels, setLevels] = useState<PieData[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [contests, setContests] = useState<ContestStats | null>(null);
+export default function CFOverviewStats({ handle }) {
+  const [verdicts, setVerdicts] = useState([]);
+  const [languages, setLanguages] = useState([]);
+  const [levels, setLevels] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [contests, setContests] = useState(null);
 
   useEffect(() => {
     if (!handle) return;
 
     async function fetchData() {
-      const res = await fetch(
-        `https://codeforces.com/api/user.status?handle=${handle}`
-      );
-      const data: any = await res.json();
+      const res = await fetch(`https://codeforces.com/api/user.status?handle=${handle}`);
+      const data = await res.json();
       if (data.status !== "OK") return;
 
-      const subs: any[] = data.result;
+      const subs = data.result;
 
-      const verdictMap: Record<string, number> = {};
-      const langMap: Record<string, number> = {};
-      const levelMap: Record<string, number> = {};
-      const solvedSet = new Set<string>();
+      const verdictMap = {};
+      const langMap = {};
+      const levelMap = {};
+      const solvedSet = new Set();
 
-      subs.forEach((s: any) => {
+      subs.forEach((s) => {
         verdictMap[s.verdict] = (verdictMap[s.verdict] || 0) + 1;
-        langMap[s.programmingLanguage] =
-          (langMap[s.programmingLanguage] || 0) + 1;
+        langMap[s.programmingLanguage] = (langMap[s.programmingLanguage] || 0) + 1;
 
         if (s.verdict === "OK") {
           const id = `${s.problem.contestId}-${s.problem.index}`;
@@ -76,12 +48,8 @@ export default function CFOverviewStats({ handle }: { handle: string }) {
         }
       });
 
-      setVerdicts(
-        Object.entries(verdictMap).map(([name, value]) => ({ name, value }))
-      );
-      setLanguages(
-        Object.entries(langMap).map(([name, value]) => ({ name, value }))
-      );
+      setVerdicts(Object.entries(verdictMap).map(([name, value]) => ({ name, value })));
+      setLanguages(Object.entries(langMap).map(([name, value]) => ({ name, value })));
       setLevels(
         Object.entries(levelMap)
           .sort()
@@ -95,23 +63,17 @@ export default function CFOverviewStats({ handle }: { handle: string }) {
     }
 
     async function fetchContests() {
-      const res = await fetch(
-        `https://codeforces.com/api/user.rating?handle=${handle}`
-      );
-      const data: any = await res.json();
+      const res = await fetch(`https://codeforces.com/api/user.rating?handle=${handle}`);
+      const data = await res.json();
       if (data.status !== "OK") return;
 
-      const ranks = data.result.map((c: any) => c.rank);
+      const ranks = data.result.map((c) => c.rank);
       setContests({
         count: data.result.length,
         best: Math.min(...ranks),
         worst: Math.max(...ranks),
-        maxUp: Math.max(
-          ...data.result.map((c: any) => c.newRating - c.oldRating)
-        ),
-        maxDown: Math.min(
-          ...data.result.map((c: any) => c.newRating - c.oldRating)
-        ),
+        maxUp: Math.max(...data.result.map((c) => c.newRating - c.oldRating)),
+        maxDown: Math.min(...data.result.map((c) => c.newRating - c.oldRating)),
       });
     }
 
@@ -169,18 +131,11 @@ export default function CFOverviewStats({ handle }: { handle: string }) {
 
 /* ---------- Helpers ---------- */
 
-function PieBlock({ data }: { data: PieData[] }) {
+function PieBlock({ data }) {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <PieChart>
-        <Pie
-          data={data}
-          dataKey="value"
-          nameKey="name"
-          outerRadius={90}
-          innerRadius={45}
-          label
-        >
+        <Pie data={data} dataKey="value" nameKey="name" outerRadius={90} innerRadius={45} label>
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
@@ -191,13 +146,7 @@ function PieBlock({ data }: { data: PieData[] }) {
   );
 }
 
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Card({ title, children }) {
   return (
     <div className="border rounded shadow p-4">
       <h3 className="font-semibold mb-2 text-center">{title}</h3>
@@ -206,7 +155,7 @@ function Card({
   );
 }
 
-function Row({ label, value }: { label: string; value: number }) {
+function Row({ label, value }) {
   return (
     <tr className="border-t">
       <td className="py-2">{label}</td>

@@ -1,22 +1,14 @@
-export async function GET() {
-  const res = await fetch("https://codeforces.com/api/contest.list", {
-    cache: "no-store",
-  });
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const handle = searchParams.get("handle");
 
-  const data: any = await res.json();
+  if (!handle) return new Response(JSON.stringify({ status: "ERROR", result: [] }), { status: 400 });
 
-  if (data.status !== "OK") {
-    return Response.json({ error: "CF API failed" }, { status: 500 });
+  try {
+    const res = await fetch(`https://codeforces.com/api/user.status?handle=${handle}`);
+    const data = await res.json();
+    return new Response(JSON.stringify(data));
+  } catch (err) {
+    return new Response(JSON.stringify({ status: "ERROR", result: [] }), { status: 500 });
   }
-
-  const upcoming = data.result
-    .filter((c: any) => c.phase === "BEFORE")
-    .map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      startTime: c.startTimeSeconds * 1000, // timestamp
-      duration: c.durationSeconds,
-    }));
-
-  return Response.json(upcoming);
 }

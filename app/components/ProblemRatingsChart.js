@@ -2,26 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
-type Problem = {
-  contestId: number;
-  index: string;
-  rating?: number;
-};
-
-type Submission = {
-  verdict: string;
-  problem: Problem;
-};
-
-type ChartItem = {
-  rating: number;
-  solved: number;
-};
-
-export default function ProblemRatingsChart({ handle }: { handle: string }) {
-  const [data, setData] = useState<ChartItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+export default function ProblemRatingsChart({ handle }) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!handle) return;
@@ -29,15 +13,22 @@ export default function ProblemRatingsChart({ handle }: { handle: string }) {
     const fetchData = async () => {
       setLoading(true);
       setError("");
+      setData([]);
 
       try {
-        const res = await fetch(`/api/cf/status?handle=${handle}`);
+        // Fetch submissions directly from Codeforces API
+        const res = await fetch(`https://codeforces.com/api/user.status?handle=${handle}`);
         const json = await res.json();
-        if (json.status !== "OK") throw new Error();
 
-        const submissions: Submission[] = json.result;
-        const ratingMap: Record<number, number> = {};
-        const solvedSet = new Set<string>();
+        if (json.status !== "OK") {
+          setError("Handle not found or API failed");
+          setLoading(false);
+          return;
+        }
+
+        const submissions = json.result;
+        const ratingMap = {};
+        const solvedSet = new Set();
 
         submissions.forEach((sub) => {
           if (sub.verdict !== "OK") return;
@@ -46,7 +37,7 @@ export default function ProblemRatingsChart({ handle }: { handle: string }) {
           if (solvedSet.has(id)) return;
           solvedSet.add(id);
 
-          const rating = sub.problem.rating ?? 0;
+          const rating = sub.problem.rating || 0;
           ratingMap[rating] = (ratingMap[rating] || 0) + 1;
         });
 
@@ -56,7 +47,8 @@ export default function ProblemRatingsChart({ handle }: { handle: string }) {
           .map((r) => ({ rating: r, solved: ratingMap[r] }));
 
         setData(chartData);
-      } catch {
+      } catch (err) {
+        console.error(err);
         setError("Error fetching submissions");
       }
 
@@ -67,7 +59,7 @@ export default function ProblemRatingsChart({ handle }: { handle: string }) {
   }, [handle]);
 
   if (!handle) return <p>Enter a handle to see problem ratings</p>;
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>Loading submissions...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   if (data.length === 0) return <p>No solved problems found</p>;
 
@@ -80,7 +72,7 @@ export default function ProblemRatingsChart({ handle }: { handle: string }) {
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="solved" />
+        <Bar dataKey="solved" fill="#2563eb" />
       </BarChart>
     </div>
   );

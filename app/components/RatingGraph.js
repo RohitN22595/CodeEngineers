@@ -11,26 +11,7 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 
-type RatingEntry = {
-  date: string;
-  rating: number;
-  contest: string;
-};
-
-type CFContest = {
-  ratingUpdateTimeSeconds: number;
-  newRating: number;
-  contestName: string;
-};
-
-type DotProps = {
-  cx?: number;
-  cy?: number;
-  payload?: { rating: number };
-  maxRating: number;
-};
-
-const CustomDot = ({ cx, cy, payload, maxRating }: DotProps) => {
+const CustomDot = ({ cx, cy, payload, maxRating }) => {
   if (cx === undefined || cy === undefined || !payload) return null;
 
   const isMax = payload.rating === maxRating;
@@ -47,9 +28,9 @@ const CustomDot = ({ cx, cy, payload, maxRating }: DotProps) => {
   );
 };
 
-export default function RatingGraph({ handle }: { handle: string }) {
-  const [data, setData] = useState<RatingEntry[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+export default function RatingGraph({ handle }) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!handle) return;
@@ -57,23 +38,26 @@ export default function RatingGraph({ handle }: { handle: string }) {
     const fetchRatingHistory = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/cf/rating?handle=${handle}`);
+        // Fetch via Next.js API route (proxy)
+        const res = await fetch(`https://codeforces.com/api/user.rating?handle=${handle}`);
         const json = await res.json();
-        if (json.status !== "OK") return;
 
-        const formatted: RatingEntry[] = json.result.map(
-          (c: CFContest) => ({
-            date: dayjs
-              .unix(c.ratingUpdateTimeSeconds)
-              .format("YYYY-MM-DD"),
-            rating: c.newRating,
-            contest: c.contestName,
-          })
-        );
+        if (json.status !== "OK") {
+          setData([]);
+          setLoading(false);
+          return;
+        }
+
+        const formatted = json.result.map((c) => ({
+          date: dayjs.unix(c.ratingUpdateTimeSeconds).format("YYYY-MM-DD"),
+          rating: c.newRating,
+          contest: c.contestName,
+        }));
 
         setData(formatted);
       } catch (err) {
         console.error("Rating fetch error:", err);
+        setData([]);
       }
       setLoading(false);
     };
@@ -82,6 +66,7 @@ export default function RatingGraph({ handle }: { handle: string }) {
   }, [handle]);
 
   if (loading) return <p>Loading rating graph...</p>;
+  if (!handle) return <p>Enter a handle to see rating graph</p>;
   if (data.length === 0) return <p>No rating history available</p>;
 
   const maxRating = Math.max(...data.map((d) => d.rating));
@@ -108,9 +93,7 @@ export default function RatingGraph({ handle }: { handle: string }) {
             dataKey="rating"
             stroke="#2563eb"
             strokeWidth={2}
-            dot={(props) => (
-              <CustomDot {...props} maxRating={maxRating} />
-            )}
+            dot={(props) => <CustomDot {...props} maxRating={maxRating} />}
             activeDot={{ r: 6 }}
           />
         </LineChart>
