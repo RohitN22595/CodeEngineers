@@ -11,9 +11,27 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 
-// Custom dot component
-const CustomDot = ({ cx, cy, payload, maxRating }) => {
-  if (cx === undefined || cy === undefined) return null;
+type RatingEntry = {
+  date: string;
+  rating: number;
+  contest: string;
+};
+
+type CFContest = {
+  ratingUpdateTimeSeconds: number;
+  newRating: number;
+  contestName: string;
+};
+
+type DotProps = {
+  cx?: number;
+  cy?: number;
+  payload?: { rating: number };
+  maxRating: number;
+};
+
+const CustomDot = ({ cx, cy, payload, maxRating }: DotProps) => {
+  if (cx === undefined || cy === undefined || !payload) return null;
 
   const isMax = payload.rating === maxRating;
 
@@ -29,9 +47,9 @@ const CustomDot = ({ cx, cy, payload, maxRating }) => {
   );
 };
 
-export default function RatingGraph({ handle }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
+export default function RatingGraph({ handle }: { handle: string }) {
+  const [data, setData] = useState<RatingEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!handle) return;
@@ -39,19 +57,19 @@ export default function RatingGraph({ handle }) {
     const fetchRatingHistory = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `https://codeforces.com/api/user.rating?handle=${handle}`
-        );
+        const res = await fetch(`/api/cf/rating?handle=${handle}`);
         const json = await res.json();
         if (json.status !== "OK") return;
 
-        const formatted = json.result.map((c) => ({
-          date: dayjs
-            .unix(c.ratingUpdateTimeSeconds)
-            .format("YYYY-MM-DD"),
-          rating: c.newRating,
-          contest: c.contestName,
-        }));
+        const formatted: RatingEntry[] = json.result.map(
+          (c: CFContest) => ({
+            date: dayjs
+              .unix(c.ratingUpdateTimeSeconds)
+              .format("YYYY-MM-DD"),
+            rating: c.newRating,
+            contest: c.contestName,
+          })
+        );
 
         setData(formatted);
       } catch (err) {
@@ -75,15 +93,8 @@ export default function RatingGraph({ handle }) {
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
-
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12 }}
-            minTickGap={30}
-          />
-
+          <XAxis dataKey="date" minTickGap={30} />
           <YAxis />
-
           <Tooltip
             formatter={(value) => [`Rating: ${value}`]}
             labelFormatter={(label, payload) =>
@@ -92,7 +103,6 @@ export default function RatingGraph({ handle }) {
                 : label
             }
           />
-
           <Line
             type="linear"
             dataKey="rating"

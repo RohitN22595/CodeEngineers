@@ -21,12 +21,30 @@ const COLORS = [
   "#13c2c2",
 ];
 
-export default function CFOverviewStats({ handle }) {
-  const [verdicts, setVerdicts] = useState([]);
-  const [languages, setLanguages] = useState([]);
-  const [levels, setLevels] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [contests, setContests] = useState(null);
+type PieData = {
+  name: string;
+  value: number;
+};
+
+type Stats = {
+  tried: number;
+  solved: number;
+};
+
+type ContestStats = {
+  count: number;
+  best: number;
+  worst: number;
+  maxUp: number;
+  maxDown: number;
+};
+
+export default function CFOverviewStats({ handle }: { handle: string }) {
+  const [verdicts, setVerdicts] = useState<PieData[]>([]);
+  const [languages, setLanguages] = useState<PieData[]>([]);
+  const [levels, setLevels] = useState<PieData[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [contests, setContests] = useState<ContestStats | null>(null);
 
   useEffect(() => {
     if (!handle) return;
@@ -35,17 +53,17 @@ export default function CFOverviewStats({ handle }) {
       const res = await fetch(
         `https://codeforces.com/api/user.status?handle=${handle}`
       );
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.status !== "OK") return;
 
-      const subs = data.result;
+      const subs: any[] = data.result;
 
-      const verdictMap = {};
-      const langMap = {};
-      const levelMap = {};
-      const solvedSet = new Set();
+      const verdictMap: Record<string, number> = {};
+      const langMap: Record<string, number> = {};
+      const levelMap: Record<string, number> = {};
+      const solvedSet = new Set<string>();
 
-      subs.forEach((s) => {
+      subs.forEach((s: any) => {
         verdictMap[s.verdict] = (verdictMap[s.verdict] || 0) + 1;
         langMap[s.programmingLanguage] =
           (langMap[s.programmingLanguage] || 0) + 1;
@@ -53,7 +71,7 @@ export default function CFOverviewStats({ handle }) {
         if (s.verdict === "OK") {
           const id = `${s.problem.contestId}-${s.problem.index}`;
           solvedSet.add(id);
-          const lvl = s.problem.index[0]; // A, B, C...
+          const lvl = s.problem.index[0];
           levelMap[lvl] = (levelMap[lvl] || 0) + 1;
         }
       });
@@ -80,16 +98,20 @@ export default function CFOverviewStats({ handle }) {
       const res = await fetch(
         `https://codeforces.com/api/user.rating?handle=${handle}`
       );
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.status !== "OK") return;
 
-      const ranks = data.result.map((c) => c.rank);
+      const ranks = data.result.map((c: any) => c.rank);
       setContests({
         count: data.result.length,
         best: Math.min(...ranks),
         worst: Math.max(...ranks),
-        maxUp: Math.max(...data.result.map((c) => c.newRating - c.oldRating)),
-        maxDown: Math.min(...data.result.map((c) => c.newRating - c.oldRating)),
+        maxUp: Math.max(
+          ...data.result.map((c: any) => c.newRating - c.oldRating)
+        ),
+        maxDown: Math.min(
+          ...data.result.map((c: any) => c.newRating - c.oldRating)
+        ),
       });
     }
 
@@ -99,17 +121,14 @@ export default function CFOverviewStats({ handle }) {
 
   return (
     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Verdicts */}
       <Card title={`Verdicts of ${handle}`}>
         <PieBlock data={verdicts} />
       </Card>
 
-      {/* Languages */}
       <Card title={`Languages of ${handle}`}>
         <PieBlock data={languages} />
       </Card>
 
-      {/* Levels */}
       <Card title={`Levels of ${handle}`}>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={levels}>
@@ -120,7 +139,6 @@ export default function CFOverviewStats({ handle }) {
         </ResponsiveContainer>
       </Card>
 
-      {/* Tables */}
       <Card title="Some numbers about">
         {stats && (
           <table className="w-full text-sm">
@@ -151,7 +169,7 @@ export default function CFOverviewStats({ handle }) {
 
 /* ---------- Helpers ---------- */
 
-function PieBlock({ data }) {
+function PieBlock({ data }: { data: PieData[] }) {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <PieChart>
@@ -160,7 +178,7 @@ function PieBlock({ data }) {
           dataKey="value"
           nameKey="name"
           outerRadius={90}
-          innerRadius={45} // 🔥 donut style
+          innerRadius={45}
           label
         >
           {data.map((_, i) => (
@@ -173,7 +191,13 @@ function PieBlock({ data }) {
   );
 }
 
-function Card({ title, children }) {
+function Card({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="border rounded shadow p-4">
       <h3 className="font-semibold mb-2 text-center">{title}</h3>
@@ -182,7 +206,7 @@ function Card({ title, children }) {
   );
 }
 
-function Row({ label, value }) {
+function Row({ label, value }: { label: string; value: number }) {
   return (
     <tr className="border-t">
       <td className="py-2">{label}</td>

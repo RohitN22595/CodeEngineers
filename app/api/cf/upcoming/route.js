@@ -3,15 +3,15 @@ export async function GET() {
     cache: "no-store",
   });
 
-  const data = await res.json();
+  const data: any = await res.json();
 
   if (data.status !== "OK") {
     return Response.json({ error: "CF API failed" }, { status: 500 });
   }
 
   const upcoming = data.result
-    .filter(c => c.phase === "BEFORE")
-    .map(c => ({
+    .filter((c: any) => c.phase === "BEFORE")
+    .map((c: any) => ({
       id: c.id,
       name: c.name,
       startTime: c.startTimeSeconds * 1000, // timestamp

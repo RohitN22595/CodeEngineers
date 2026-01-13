@@ -14,14 +14,15 @@ async function fetchSolvedPerDay(handle: string) {
   const res = await fetch(
     `https://codeforces.com/api/user.status?handle=${handle}`
   );
-  const data = await res.json();
+  const data: any = await res.json();
   if (data.status !== "OK") return {};
 
-  const solvedPerDay = {};
-  const solvedSet = new Set();
+  const solvedPerDay: Record<string, number> = {};
+  const solvedSet = new Set<string>();
 
-  data.result.forEach((sub) => {
+  data.result.forEach((sub: any) => {
     if (sub.verdict !== "OK") return;
+
     const problemId = `${sub.problem.contestId}-${sub.problem.index}`;
     if (solvedSet.has(problemId)) return;
     solvedSet.add(problemId);
@@ -36,8 +37,9 @@ async function fetchSolvedPerDay(handle: string) {
   return solvedPerDay;
 }
 
+
 // Calculate stats
-function calculateStats(solvedData) {
+function calculateStats(solvedData: Record<string, number>) {
   const today = dayjs().format("YYYY-MM-DD");
   const last7 = dayjs().subtract(6, "day");
   const last30 = dayjs().subtract(29, "day");
@@ -47,7 +49,7 @@ function calculateStats(solvedData) {
     lastWeek = 0,
     lastMonth = 0;
 
-  Object.entries(solvedData).forEach(([date, count]) => {
+  Object.entries(solvedData).forEach(([date, count]: [string, number]) => {
     total += count;
     if (date === today) todayCount += count;
 
@@ -59,18 +61,20 @@ function calculateStats(solvedData) {
   return { total, todayCount, lastWeek, lastMonth };
 }
 
+
 export default function CodeforcesProfile() {
-  const [handle, setHandle] = useState("");
-  const [profile, setProfile] = useState(null);
-  const [solvedData, setSolvedData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [selectedYear, setSelectedYear] = useState(dayjs().year());
-  const [registeredYear, setRegisteredYear] = useState(dayjs().year());
+  const [handle, setHandle] = useState<string>("");
+  const [profile, setProfile] = useState<any>(null);
+  const [solvedData, setSolvedData] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<number>(dayjs().year());
+  const [registeredYear, setRegisteredYear] = useState<number>(dayjs().year());
+
 
   const stats = calculateStats(solvedData);
 
-  const fetchProfileAndCalendar = async (inputHandle) => {
+  const fetchProfileAndCalendar = async (inputHandle: string) => {
     const h = inputHandle || handle;
     if (!h.trim()) {
       setError("Enter a handle");
@@ -116,11 +120,12 @@ export default function CodeforcesProfile() {
   return (
     <>
       <Nav
-        onHandleSelect={(h) => {
+        onHandleSelect={(h: string) => {
           setHandle(h);
           fetchProfileAndCalendar(h);
         }}
       />
+
 
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">Codeforces Profile</h1>
