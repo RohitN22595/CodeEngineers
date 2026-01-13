@@ -10,7 +10,7 @@ import CFOverviewStats from "../components/CFOverviewStats";
 import Footer from "../components/Footer";
 
 // Fetch solved per day
-async function fetchSolvedPerDay(handle) {
+async function fetchSolvedPerDay(handle: string) {
   const res = await fetch(
     `https://codeforces.com/api/user.status?handle=${handle}`
   );
