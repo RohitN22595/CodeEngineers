@@ -7,7 +7,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Navbar at top */}
       <header>
-        <Nav />
+        <Nav onHandleSelect={() => {}} defaultHandle="" />
       </header>
 
       {/* Main content */}
